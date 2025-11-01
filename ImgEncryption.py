@@ -1,52 +1,76 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox
 from PIL import Image
 import numpy as np
-import tkinter as tk
 
-def encrypt_image(image_path, key):
-    # Open the image
-    img = Image.open(image_path)
-    # Convert image to numpy array
-    img_array = np.array(img)
-    
-    # Convert key to integer if it's a string
-    if isinstance(key, str):
-        key = sum(ord(c) for c in key)
-    
-    # XOR operation on each pixel value
-    encrypted = img_array ^ key
-    
-    # Convert back to image
-    encrypted_img = Image.fromarray(encrypted.astype('uint8'))
-    return encrypted_img
+#pip install tk numpy pillow
 
-def decrypt_image(encrypted_img, key):
-    # Convert image to numpy array
-    img_array = np.array(encrypted_img)
-    
-    # Convert key to integer if it's a string
-    if isinstance(key, str):
-        key = sum(ord(c) for c in key)
-    
-    # XOR operation to decrypt (XOR with same key)
-    decrypted = img_array ^ key
-    
-    # Convert back to image
-    decrypted_img = Image.fromarray(decrypted.astype('uint8'))
-    return decrypted_img
+def select_image():
+    global image_path
+    image_path = filedialog.askopenfilename(
+        title="Select an Image",
+        filetypes=[("Image Files", "*.png *.jpg *.jpeg")]
+    )
+    if image_path:
+        label.config(text=f"Selected: {image_path}")
+    else:
+        label.config(text="No image selected")
 
-def main():
-    root = tk.Tk()
-    root.withdraw()  # Hide the main window
-    input_image = "input_image.png"  # Path to your input image
-    key =   "my_secret_key"  # Your encryption key      
-    
-    # Encrypt
-    encrypted = encrypt_image(input_image, key)
-    encrypted.save("encrypted_image.png")
-    
-    # Decrypt
-    decrypted = decrypt_image(encrypted, key)
-    decrypted.save("decrypted_image.png")
 
-if __name__ == "__main__":
-    main()
+def xor_encrypt_image(encrypt=True):
+    global image_path
+    try:
+        key = int(key_entry.get()) # Get the XOR key from user input
+    except ValueError:
+        messagebox.showerror("Error", "Please enter a valid integer key!")
+        return
+    
+    #choice = messagebox.askquestion("Encrypt or Decrypt", "Do you want to Encrypt the image? (No will Decrypt)")
+    if not image_path:
+        messagebox.showerror("Error", "Please select an image first!")
+        return
+
+    try:
+        # Load image
+        img = Image.open(image_path)
+        img_array = np.array(img)
+        # Apply XOR operation
+        xor_array = np.bitwise_xor(img_array, key) 
+        # Convert back to image
+        xor_img = Image.fromarray(xor_array.astype('uint8'))
+        # Save the new image
+        action = "encrypted" if encrypt else "decrypted"
+        save_path = filedialog.asksaveasfilename(
+            title=f"Save {action.capitalize()} Image as",
+            defaultextension=".png",
+            filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg;*.jpeg")]
+        )
+        if save_path:
+            xor_img.save(save_path)
+            messagebox.showinfo("Success", f"Image {action} and saved to:\n{save_path}")
+
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+
+window = tk.Tk()
+window.title("Image XOR Encryption")
+window.geometry("450x250")
+
+image_path = None
+
+label = tk.Label(window, text="No image selected", wraplength=400)
+label.pack(pady=20)
+
+select_btn = tk.Button(window, text="Select Image", command=select_image)
+select_btn.pack(pady=10)
+
+key_label = tk.Label(window, text="Enter XOR Key (0-255):")
+key_label.pack(pady=5)
+
+key_entry = tk.Entry(window)
+key_entry.pack(pady=5)
+
+encrypt_btn = tk.Button(window, text="Encrypt / Decrypt Image", command=xor_encrypt_image)
+encrypt_btn.pack(pady=10)
+
+window.mainloop()
