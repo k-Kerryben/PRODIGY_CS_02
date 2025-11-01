@@ -52,9 +52,15 @@ def xor_encrypt_image(encrypt=True):
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
+def reset_app():
+    global image_path
+    image_path = None
+    label.config(text="No image selected")
+    key_entry.delete(0, tk.END)
+
 window = tk.Tk()
 window.title("Image XOR Encryption")
-window.geometry("450x250")
+window.geometry("450x300")
 
 image_path = None
 
@@ -70,7 +76,13 @@ key_label.pack(pady=5)
 key_entry = tk.Entry(window)
 key_entry.pack(pady=5)
 
-encrypt_btn = tk.Button(window, text="Encrypt / Decrypt Image", command=xor_encrypt_image)
+encrypt_btn = tk.Button(window, text="Encrypt Image", command=lambda: xor_encrypt_image(encrypt=True))
 encrypt_btn.pack(pady=10)
+
+decrypt_btn = tk.Button(window, text="Decrypt Image", command=lambda: xor_encrypt_image(encrypt=False))
+decrypt_btn.pack(pady=10)
+
+reset_btn = tk.Button(window, text="Reset", command=reset_app)
+reset_btn.pack(pady=10)
 
 window.mainloop()
